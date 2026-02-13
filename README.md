@@ -7,3 +7,7 @@ Contains functions for pricing bonds and various bond derivatives using a binomi
 BDT_rates_model_ZCB_pricing.py:
 The main objective of this file is to compute ZCB prices for maturities between 1 and 30 years using
 the BDT tree model for rates and calibrating using real market data (obtained from FRED)
+
+mean_variance_analysis.py:
+This file contains functions that compute the optimal portfolio of a collection of stocks when
+constrained by a maximum value of risk (volatility) or a minimum value of returns.

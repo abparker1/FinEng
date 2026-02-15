@@ -40,7 +40,7 @@ def vol_objective(x, cov_matrix):
 
 #maximize returns at (at_most == False) or below (at_most == True) a fixed level
 #assumes short positions are allowed unless short_allowed == False
-def max_returns_sol(tickers, interval, period, risk_allowance, at_most = True, short_allowed = True):
+def max_returns_sol(tickers, interval, interval_dict, period, risk_allowance, at_most = True, short_allowed = True):
     (cov_matrix, mean_returns) = build_stock_data(tickers, interval, period)
     x = np.ones(len(mean_returns))/len(mean_returns)
     
@@ -62,23 +62,24 @@ def max_returns_sol(tickers, interval, period, risk_allowance, at_most = True, s
     print('\n\n\n')
     if res.success:
         weights = res.x
-        percent_returns = -100*res.fun
+        percent_returns = -1*res.fun
         
         print("Asset Weights\n"+'-'*25)
         for i in range(len(tickers)):
             print(f'Stock: {tickers[i]}, Weight: {weights[i]}')
             
-            
+        vol = vol_objective(weights, cov_matrix)[0]*100
+        
         print(2*('-'*25 + '\n'))
-        print(f'Expected Return: {percent_returns:.3f}%')
-        print(f'Volatility: {vol_objective(weights, cov_matrix)[0]*100:.3f}%')
+        print(f'Expected {interval_dict[interval][0]} Return: {100*percent_returns:.3f}% (Annualized: {100*(np.power(1 + percent_returns, interval_dict[interval][1]) - 1):.3f}%)')
+        print(f'{interval_dict[interval][0]} Volatility: {vol:.3f}% (Annualized: {vol*np.sqrt(interval_dict[interval][1]):.3f}%)')
     
     else:
         print('No portfolio exists with given constraints')
     
 #minimize risk (historical volatility) while maintaining returns at (at_least == False) or above (at_least == True) a fixed level
 #assumes short positions are allowed unless short_allowed == False
-def min_risk_sol(tickers, interval, period, desired_returns, at_least = True, short_allowed = True):
+def min_risk_sol(tickers, interval, interval_dict, period, desired_returns, at_least = True, short_allowed = True):
     
     (cov_matrix, mean_returns) = build_stock_data(tickers, interval, period)
     x = np.ones(len(mean_returns))/len(mean_returns)
@@ -101,29 +102,32 @@ def min_risk_sol(tickers, interval, period, desired_returns, at_least = True, sh
     if res.success:
         weights = res.x
         vol = 100*res.fun
-        
+        percent_returns = -1*return_objective(weights, mean_returns)
         print("Asset Weights\n"+'-'*25)
         for i in range(len(tickers)):
             print(f'Stock: {tickers[i]}, Weight: {weights[i]}')
             
         print(2*('-'*25 + '\n'))
-        print(f'Expected Return: {-100*return_objective(weights, mean_returns):.3f}%')
-        print(f'Volatility: {vol:.3f}%')
+        print(f'Expected {interval_dict[interval][0]} Return: {100*percent_returns:.3f}% (Annualized: {100*(np.power(1 + percent_returns, interval_dict[interval][1]) - 1):.3f}%)')
+        print(f'{interval_dict[interval][0]} Volatility: {vol:.3f}% (Annualized: {vol*np.sqrt(interval_dict[interval][1]):.3f}%)')
         
     else:
         print('No portfolio exists with the given constraints')
 
 
-#------------------------------------------------
-#------------------------------------------------
-#------------------------------------------------
+interval_dict = {'1d':['Daily', 252], '1wk':['Weekly', 52], '1mo':['Monthly',12], '3mo':['3 Month', 4]}
+
+
+#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
 
 tickers = ['AAPL', 'GOOG', 'AMZN', 'TSLA', 'NVDA']
 
 #interval options
 #------------------------
-#1d, 5d, 1wk, 1mo, 3mo
-interval = '3mo'
+#1d, 1wk, 1mo, 3mo
+interval = '1mo'
 
 
 #period options
@@ -134,12 +138,12 @@ period = '5y'
 short_allowed = False
 
 at_most = True
-risk_allowance = 0.15
-max_returns_sol(tickers, interval, period, risk_allowance, at_most = at_most, short_allowed = short_allowed)
+interval_risk_allowance = 0.15
+max_returns_sol(tickers, interval, interval_dict, period, interval_risk_allowance, at_most = at_most, short_allowed = short_allowed)
 
 # at_least = True
-# desired_returns = 0.08
-# min_risk_sol(tickers, interval, period, desired_returns, at_least = at_least, short_allowed = short_allowed)
+# interval_desired_returns = 0.08
+# min_risk_sol(tickers, interval, interval_dict, period, interval_desired_returns, at_least = at_least, short_allowed = short_allowed)
 
 
 
